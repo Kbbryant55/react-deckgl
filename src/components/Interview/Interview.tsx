@@ -36,20 +36,23 @@ const DeckGLOverlay = (props: DeckProps) => {
 
 const Interview = () => {
   const [layers, setLayers] = useState<LayersList>([]);
-  const [info, setInfo] = useState<PickingInfo | null>(null);
+  const [info, setInfo] = useState<{ [key: string]: PickingInfo }>({});
   const [layerType, setLayerType] = useState<"gas" | "grocery">("gas");
   const [filteredOptions, setFilteredOptions] = useState<string[]>([]);
 
-  const hideTooltip = useCallback(() => {
-    setInfo(null);
+  const hideTooltip = useCallback((key: string) => {
+    setInfo((prev) => {
+      const newInfo = { ...prev };
+      delete newInfo[key];
+      return newInfo;
+    });
   }, []);
 
-  const expandTooltip = useCallback((info: PickingInfo) => {
-    if (info.picked) {
-      setInfo(info);
-    } else {
-      setInfo(null);
-    }
+  const expandTooltip = useCallback((pickedObject: PickingInfo) => {
+    setInfo((prev) => ({
+      ...prev,
+      [`${pickedObject.object.properties?.GLOBALID}`]: pickedObject,
+    }));
   }, []);
 
   const createScatterplotLayer = useCallback(
@@ -90,9 +93,13 @@ const Interview = () => {
     setFilteredOptions(names);
   }, [layerType]);
 
+  const resetInfo = useCallback(() => {
+    setInfo({});
+  }, []);
+
   const handleInputChange = (event: any, value: string) => {
     // Clear the tooltip when the user types
-    setInfo(null);
+    resetInfo();
 
     const data =
       layerType === "gas" ? gasStations.features : groceryStores.features;
@@ -125,7 +132,7 @@ const Interview = () => {
     setLayers([createScatterplotLayer(data, newLayerType)]);
     setLayerType(newLayerType);
     setFilteredOptions([]);
-    hideTooltip();
+    resetInfo();
   };
 
   const handleSelect = (event: any, value: string | null) => {
@@ -158,17 +165,12 @@ const Interview = () => {
 
   return (
     <div className="w-screen h-screen relative">
-      <Map
-        initialViewState={INITIAL_VIEW_STATE}
-        mapStyle={MAP_STYLE}
-        reuseMaps
-        onMove={hideTooltip}
-      >
-        <DeckGLOverlay layers={layers} onViewStateChange={hideTooltip} />
+      <Map initialViewState={INITIAL_VIEW_STATE} mapStyle={MAP_STYLE} reuseMaps>
+        <DeckGLOverlay layers={layers} onViewStateChange={resetInfo} />
         <NavigationControl position="top-right" />
         <ScaleControl position="bottom-right" />
       </Map>
-      <div className="absolute top-4 left-4 z-10">
+      <div className="absolute top-4 left-4 z-10 bg-white">
         <Autocomplete
           options={filteredOptions}
           onInputChange={handleInputChange}
@@ -192,16 +194,21 @@ const Interview = () => {
         />
       </div>
       <div className="absolute bottom-4 left-4 z-10">
-        <MapLayerToggle onToggle={handleToggle} />
+        <MapLayerToggle onToggle={handleToggle} layer={layerType} />
       </div>
-      {info && (
-        <Tooltip
-          x={info.x}
-          y={info.y}
-          object={info.object}
-          layerType={layerType}
-        />
-      )}
+      {Object.keys(info).length > 0 &&
+        Object.keys(info).map((key) => {
+          return (
+            <Tooltip
+              key={key}
+              layerType={layerType}
+              onClose={hideTooltip}
+              x={info[key].x}
+              y={info[key].y}
+              object={info[key].object}
+            />
+          );
+        })}
     </div>
   );
 };

@@ -17,5 +17,5 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Toggle: Story = {
-  args: {},
+  args: { layer: "gas" },
 };

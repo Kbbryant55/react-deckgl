@@ -5,9 +5,10 @@ interface TooltipProps {
   y: number;
   object: any;
   layerType: "gas" | "grocery";
+  onClose: (id: string) => void;
 }
 
-const Tooltip = ({ x, y, object, layerType }: TooltipProps) => {
+const Tooltip = ({ x, y, object, layerType, onClose }: TooltipProps) => {
   if (!object) return null;
 
   const getTooltipContent = () => {
@@ -31,13 +32,24 @@ const Tooltip = ({ x, y, object, layerType }: TooltipProps) => {
 
   return (
     <div
-      className="absolute bg-white/95 backdrop-blur-sm text-gray-800 p-4 rounded-lg text-sm font-sans pointer-events-none z-50 max-w-[250px] shadow-2xl border border-gray-200"
+      className="absolute bg-white/95 backdrop-blur-sm text-gray-800 p-6 rounded-lg text-sm font-sans z-50 max-w-[250px] shadow-2xl border border-gray-200"
       style={{
         left: x,
         top: y - 140,
         transform: "translateX(-50%) translateY(-30%)",
       }}
     >
+      <div className="absolute top-2 right-2">
+        <IonIcon
+          name="close-outline"
+          className="w-4 h-4 text-gray-500 cursor-pointer"
+          onClick={(event) => {
+            event.stopPropagation();
+            event.preventDefault();
+            onClose(object.properties?.GLOBALID);
+          }}
+        />
+      </div>
       <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
         <div
           className={`w-3 h-3 rounded-full ${

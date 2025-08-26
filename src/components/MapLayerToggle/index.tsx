@@ -6,15 +6,12 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
 interface MapLayerToggleProps {
   onToggle: (layer: string) => void;
+  layer: string;
 }
 
-const MapLayerToggle = ({ onToggle }: MapLayerToggleProps) => {
-  const [layer, setLayer] = useState("gas");
-
-  const handleToggle = () => {
-    const newLayer = layer === "gas" ? "grocery" : "gas";
-    setLayer(newLayer);
-    onToggle(newLayer);
+const MapLayerToggle = ({ onToggle, layer }: MapLayerToggleProps) => {
+  const handleToggle = (event: any, value: any) => {
+    onToggle(value);
   };
 
   return (
